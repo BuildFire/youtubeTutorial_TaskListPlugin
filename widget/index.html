@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+  <!-- JS -->
+  <script src="../../../scripts/buildfire.js"></script>
+    <script src="authManager.js"></script>
+
+    <style>
+
+        body{
+            padding: 1em;
+        }
+        ul{
+            padding: 0;
+            margin-bottom: 1em;
+        }
+
+        li{
+            padding:.5em;
+            margin-top: 5px;
+            border-left: grey 5px solid;
+            background-color: #fcfcfc;
+            list-style-type: none;
+            cursor: pointer;
+        }
+
+        .completed{
+            border-left-color: greenyellow;
+        }
+
+    </style>
+
+</head>
+<body>
+    <h3>Tasks</h3>
+    <ul id="ulTasks"></ul>
+
+    <script>
+
+        let myProfile={
+        	completedTasks:[]
+		};
+
+		function load() {
+			buildfire.datastore.get("taskListCol", (err, response) => {
+
+				if (err)
+					console.error(err);
+				else if(response.data.tasks)
+				    renderTasks(response.data.tasks);
+			});
+
+
+			buildfire.datastore.onUpdate(obj=>{
+				renderTasks(obj.data.tasks);
+            });
+
+			authManager.getCurrentUser( (err,user)=>{
+				if(err)
+					return console.error(err);
+				else
+					loadUserTasks(user);
+            });
+
+			authManager.enforceLogin();
+
+		}
+
+		function renderTasks(tasks){
+				ulTasks.innerHTML='';
+				if(tasks && tasks.length)
+					tasks.forEach(addTaskToList);
+
+        }
+
+        function loadUserTasks(user){
+            buildfire.userData.get("myCompletedTasks",(err,response)=>{
+            	if(response && response.data && response.data.completedTasks) {
+					myProfile= response.data;
+					myProfile.completedTasks.forEach(t => {
+						document.querySelectorAll("#ulTasks > li").forEach(li => {
+							if (li.innerHTML == t)
+								li.classList.add("completed");
+						})
+					});
+				}
+            });
+        }
+
+		function addTaskToList(taskName){
+			let li = ui('li',ulTasks,taskName);
+
+			li.onclick=()=>{
+
+
+				if(li.classList.contains("completed")) {
+					li.classList.remove("completed");
+					let i = myProfile.completedTasks.findIndex(t=>t==taskName);
+					if(i>=0) {
+						myProfile.completedTasks.splice(i,1);
+						saveUserTasks();
+					}
+				}
+				else {
+					li.classList.add("completed");
+					myProfile.completedTasks.push(taskName);
+					saveUserTasks();
+				}
+            }
+
+		}
+
+		function saveUserTasks(){
+			buildfire.userData.save(myProfile, "myCompletedTasks", err=>console.error(err));
+        }
+
+		function ui(elementType,appendTo,innerHTML,classNameArray){
+			let e = document.createElement(elementType);
+			if(innerHTML) e.innerHTML = innerHTML;
+			if(Array.isArray(classNameArray))
+				classNameArray.forEach(c=>e.classList.add(c));
+			if(appendTo) appendTo.appendChild(e);
+			return e;
+		}
+
+		load();
+
+    </script>
+</body>
+</html>
