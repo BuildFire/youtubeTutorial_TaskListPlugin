@@ -89,6 +89,7 @@
             });
         }
 
+
 		function addTaskToList(taskName){
 			let li = ui('li',ulTasks,taskName);
 
@@ -107,6 +108,7 @@
 					li.classList.add("completed");
 					myProfile.completedTasks.push(taskName);
 					saveUserTasks();
+					buildfire.analytics.trackAction("TASK_COMPLETED");
 				}
             }
 

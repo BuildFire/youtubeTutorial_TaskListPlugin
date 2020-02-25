@@ -109,6 +109,15 @@
 
 		load();
 
+		function registerEvents() {
+			buildfire.analytics.registerEvent({
+				title: "Task Completed",
+				key: "TASK_COMPLETED",
+				description: "Occurs when a user marks a task as complete"
+			}, {silentNotification: false});
+		}
+		registerEvents();
+
     </script>
 
 </body>
